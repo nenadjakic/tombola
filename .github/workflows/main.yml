@@ -36,4 +36,4 @@ jobs:
     - name: Run build with Gradle Wrapper
       run: ./gradlew build
     - name: Run code coverage verification
-      run: ./gradlew jacocoTestCoverageVerificatin
+      run: ./gradlew jacocoTestCoverageVerification
