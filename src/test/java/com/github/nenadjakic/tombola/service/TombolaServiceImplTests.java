@@ -13,13 +13,13 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class TombolaServiceTests {
+class TombolaServiceImplTests {
 
-    private static TombolaService tombolaService;
+    private static TombolaServiceImpl tombolaServiceImpl;
 
     @BeforeAll
     static void initAll() {
-        tombolaService = new TombolaService();
+        tombolaServiceImpl = new TombolaServiceImpl();
     }
 
     @BeforeEach
@@ -28,32 +28,32 @@ class TombolaServiceTests {
 
     @Test
     void generate() {
-        tombolaService.generate(1, 50, 10);
+        tombolaServiceImpl.generate(1, 50, 10);
 
-        assertEquals(10, tombolaService.getGeneratedNumbers().size());
+        assertEquals(10, tombolaServiceImpl.getGeneratedNumbers().size());
 
-        tombolaService.generate(1, 5, 5);
-        assertTrue(tombolaService.getGeneratedNumbers().containsAll(Arrays.asList(1, 2, 3, 4, 5)));
+        tombolaServiceImpl.generate(1, 5, 5);
+        assertTrue(tombolaServiceImpl.getGeneratedNumbers().containsAll(Arrays.asList(1, 2, 3, 4, 5)));
     }
 
     @ParameterizedTest
     @ValueSource(ints = { 5, 10 })
     void pickNext(int pick) {
-        tombolaService.generate(1, 50, pick);
+        tombolaServiceImpl.generate(1, 50, pick);
         for (int i = 0; i < pick; i++) {
-            assertNotNull(tombolaService.pickNext());
+            assertNotNull(tombolaServiceImpl.pickNext());
         }
-        assertNull(tombolaService.pickNext());
+        assertNull(tombolaServiceImpl.pickNext());
     }
 
     @ParameterizedTest
     @MethodSource("providePickAllParameters")
     void pickAll(int min, int max, int pick) {
-        tombolaService.generate(min, max, pick);
-        final var generatedNumbers = tombolaService.getGeneratedNumbers();
-        final var pickedAllNumbers = tombolaService.pickAll();
+        tombolaServiceImpl.generate(min, max, pick);
+        final var generatedNumbers = tombolaServiceImpl.getGeneratedNumbers();
+        final var pickedAllNumbers = tombolaServiceImpl.pickAll();
         assertTrue(generatedNumbers.containsAll(pickedAllNumbers));
-        assertTrue(tombolaService.pickAll().isEmpty());
+        assertTrue(tombolaServiceImpl.pickAll().isEmpty());
     }
 
     private static Stream<Arguments> providePickAllParameters() {
