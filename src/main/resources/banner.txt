@@ -5,5 +5,5 @@
  | |,| \__. || | | | | | |  \__/ | \__. || |// | |,
  \__/ '.__.'[___||__||__|__;.__.' '.__.'[___]'-;__/
 
- :: ${application.title} ::       ${application.version}
+ :: ${spring.application.name} ::       ${spring.application.version}
  :: Spring Boot ::       ${spring-boot.version}
