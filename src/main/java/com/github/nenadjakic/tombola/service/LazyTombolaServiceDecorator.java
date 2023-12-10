@@ -10,18 +10,24 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-public class LazyTombolaService {
-    private final TombolaService tombolaService;
+public class LazyTombolaServiceDecorator implements TombolaService {
+    private final TombolaServiceImpl tombolaServiceImpl;
     private final ProgressBarUpdateObserver progressBarUpdateObserver;
     private final SpinnerComponentUpdateObserver spinnerComponentUpdateObserver;
 
     @Autowired
-    public LazyTombolaService(TombolaService tombolaService, ProgressBarUpdateObserver progressBarUpdateObserver, SpinnerComponentUpdateObserver spinnerComponentUpdateObserver) {
-        this.tombolaService = tombolaService;
+    public LazyTombolaServiceDecorator(TombolaServiceImpl tombolaServiceImpl, ProgressBarUpdateObserver progressBarUpdateObserver, SpinnerComponentUpdateObserver spinnerComponentUpdateObserver) {
+        this.tombolaServiceImpl = tombolaServiceImpl;
         this.progressBarUpdateObserver = progressBarUpdateObserver;
         this.spinnerComponentUpdateObserver = spinnerComponentUpdateObserver;
     }
 
+    @Override
+    public boolean isNumberGenerated() {
+        return tombolaServiceImpl.isNumberGenerated();
+    }
+
+    @Override
     public void generate(Integer min, Integer max, Integer pick) {
 
         for (int i = 1; i <= 9; i++) {
@@ -33,10 +39,11 @@ public class LazyTombolaService {
             }
         }
 
-        tombolaService.generate(min, max, pick);
+        tombolaServiceImpl.generate(min, max, pick);
         notifyObserver(progressBarUpdateObserver, Map.of("progress", 100, "message", "Tombola numbers are generated.", "message-type", "success"));
     }
 
+    @Override
     public Integer pickNext() {
         notifyObserver(spinnerComponentUpdateObserver, Map.of("timeout-ms", 1000));
         try {
@@ -44,9 +51,10 @@ public class LazyTombolaService {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        return tombolaService.pickNext();
+        return tombolaServiceImpl.pickNext();
     }
 
+    @Override
     public List<Integer> pickAll() {
         notifyObserver(spinnerComponentUpdateObserver, Map.of("timeout-ms", 1000));
         try {
@@ -54,7 +62,7 @@ public class LazyTombolaService {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        return tombolaService.pickAll();
+        return tombolaServiceImpl.pickAll();
     }
 
     public void notifyObserver(Observer observer, final Map<String, Object> properties) {
