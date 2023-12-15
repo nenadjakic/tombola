@@ -7,6 +7,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -16,8 +17,16 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ProgressBarComponentTests {
 
+    private ByteArrayOutputStream outputStream;
+    private ProgressBarComponent progressBarComponent;
+
     @BeforeEach
-    void setUp() {
+    void setUp() throws IOException {
+        final ByteArrayInputStream inputStream =  new ByteArrayInputStream(new byte[] {});
+        outputStream = new ByteArrayOutputStream();
+        Terminal terminal = TerminalBuilder.builder().streams(inputStream, outputStream).build();
+        PrettyPrinter prettyPrinter = new PrettyPrinter(terminal);
+        progressBarComponent = new ProgressBarComponent(prettyPrinter);
     }
 
     @AfterEach
@@ -26,14 +35,7 @@ class ProgressBarComponentTests {
 
     @Test
     @DisplayName("display with percentage parameter")
-    void displayPercentage() throws IOException {
-        byte[] buffer = {};
-        final ByteArrayInputStream inputStream =  new ByteArrayInputStream(buffer);
-        final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        Terminal terminal = TerminalBuilder.builder().streams(inputStream, outputStream).build();
-        PrettyPrinter prettyPrinter = new PrettyPrinter(terminal);
-        ProgressBarComponent progressBarComponent = new ProgressBarComponent(prettyPrinter);
-
+    void displayPercentage() {
         progressBarComponent.display(50);
         var result = outputStream.toString();
         assertTrue(result.contains("=".repeat(10)));
@@ -43,14 +45,7 @@ class ProgressBarComponentTests {
 
     @Test
     @DisplayName("display with percentage and message parameters")
-    void displayPercentageMessage() throws IOException {
-        byte[] buffer = {};
-        final ByteArrayInputStream inputStream =  new ByteArrayInputStream(buffer);
-        final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        Terminal terminal = TerminalBuilder.builder().streams(inputStream, outputStream).build();
-        PrettyPrinter prettyPrinter = new PrettyPrinter(terminal);
-        ProgressBarComponent progressBarComponent = new ProgressBarComponent(prettyPrinter);
-
+    void displayPercentageMessage() {
         progressBarComponent.display(100, "DONE");
         var result = outputStream.toString();
         assertTrue(result.contains("=".repeat(20)));
@@ -61,5 +56,10 @@ class ProgressBarComponentTests {
 
     @Test
     void reset() {
+        assertFalse((boolean) ReflectionTestUtils.getField(progressBarComponent, "started"));
+        progressBarComponent.display(100, "DONE");
+        assertTrue((boolean) ReflectionTestUtils.getField(progressBarComponent, "started"));
+        progressBarComponent.reset();
+        assertFalse((boolean) ReflectionTestUtils.getField(progressBarComponent, "started"));
     }
 }

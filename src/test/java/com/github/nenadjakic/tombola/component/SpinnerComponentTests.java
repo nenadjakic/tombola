@@ -3,6 +3,8 @@ package com.github.nenadjakic.tombola.component;
 import com.github.nenadjakic.tombola.util.PrettyPrinter;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -17,20 +19,28 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class SpinnerComponentTests {
 
+    private ByteArrayOutputStream outputStream;
+    SpinnerComponent spinnerComponent;
+    char[] spinnerChars;
+
+    @BeforeEach
+    void setUp() throws IOException {
+        final ByteArrayInputStream inputStream =  new ByteArrayInputStream(new byte[]{});
+        outputStream = new ByteArrayOutputStream();
+        Terminal terminal = TerminalBuilder.builder().streams(inputStream, outputStream).build();
+        PrettyPrinter prettyPrinter = new PrettyPrinter(terminal);
+        spinnerComponent = new SpinnerComponent(prettyPrinter);
+        spinnerChars = (char[]) ReflectionTestUtils.getField(spinnerComponent, "spinner");
+    }
+
+    @AfterEach
+    void tearDown() {
+    }
+
     @ParameterizedTest
     @ValueSource(ints = { 1, 2, 3, 4, 5 })
     @DisplayName("display without parameters")
-    void display(int count) throws IOException {
-        byte[] buffer = {};
-        final ByteArrayInputStream inputStream =  new ByteArrayInputStream(buffer);
-        final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        Terminal terminal = TerminalBuilder.builder().streams(inputStream, outputStream).build();
-        PrettyPrinter prettyPrinter = new PrettyPrinter(terminal);
-
-        SpinnerComponent spinnerComponent = new SpinnerComponent(prettyPrinter);
-
-        char[] spinnerChars = (char[]) ReflectionTestUtils.getField(spinnerComponent, "spinner");
-
+    void display(int count) {
         for (int i = 0; i < count; i++) {
             spinnerComponent.display();
         }
@@ -42,17 +52,7 @@ class SpinnerComponentTests {
     @ParameterizedTest
     @ValueSource(ints = { 1, 2, 3, 4, 5 })
     @DisplayName("display with message parameter")
-    void displayWithMessage(int count) throws IOException {
-        byte[] buffer = {};
-        final ByteArrayInputStream inputStream =  new ByteArrayInputStream(buffer);
-        final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        Terminal terminal = TerminalBuilder.builder().streams(inputStream, outputStream).build();
-        PrettyPrinter prettyPrinter = new PrettyPrinter(terminal);
-
-        SpinnerComponent spinnerComponent = new SpinnerComponent(prettyPrinter);
-
-        char[] spinnerChars = (char[]) ReflectionTestUtils.getField(spinnerComponent, "spinner");
-
+    void displayWithMessage(int count) {
         for (int i = 0; i < count; i++) {
             spinnerComponent.display("MSG");
         }
@@ -64,5 +64,16 @@ class SpinnerComponentTests {
 
     @Test
     void reset() {
+        assertSpinnerStoped();
+        spinnerComponent.display();
+        assertEquals(1, (int) ReflectionTestUtils.getField(spinnerComponent, "spinCounter"));
+        assertTrue((boolean) ReflectionTestUtils.getField(spinnerComponent, "started"));
+        spinnerComponent.reset();
+        assertSpinnerStoped();
+    }
+
+    private void assertSpinnerStoped() {
+        assertEquals(0, (int) ReflectionTestUtils.getField(spinnerComponent, "spinCounter"));
+        assertFalse((boolean) ReflectionTestUtils.getField(spinnerComponent, "started"));
     }
 }
