@@ -3,27 +3,37 @@ package com.github.nenadjakic.tombola.service;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Arrays;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@ExtendWith(MockitoExtension.class)
 class TombolaServiceImplTests {
 
-    private static TombolaServiceImpl tombolaServiceImpl;
+    @Mock
+    private LogService logService;
+
+    private TombolaServiceImpl tombolaServiceImpl;
 
     @BeforeAll
     static void initAll() {
-        tombolaServiceImpl = new TombolaServiceImpl();
+
     }
 
     @BeforeEach
     void init() {
+        logService = Mockito.mock(LogService.class);
+        tombolaServiceImpl = new TombolaServiceImpl(logService);
     }
 
     @Test
@@ -54,6 +64,17 @@ class TombolaServiceImplTests {
         final var pickedAllNumbers = tombolaServiceImpl.pickAll();
         assertTrue(generatedNumbers.containsAll(pickedAllNumbers));
         assertTrue(tombolaServiceImpl.pickAll().isEmpty());
+    }
+
+    @Test
+    void isGenerated_numbersShouldBeGenerated() {
+        tombolaServiceImpl.generate(1, 1, 1);
+        assertTrue(tombolaServiceImpl.isNumberGenerated());
+    }
+
+    @Test
+    void isGenerated_numbersShouldNotBeGenerated() {
+        assertFalse(tombolaServiceImpl.isNumberGenerated());
     }
 
     private static Stream<Arguments> providePickAllParameters() {

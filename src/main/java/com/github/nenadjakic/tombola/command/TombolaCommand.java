@@ -1,6 +1,8 @@
 package com.github.nenadjakic.tombola.command;
 
 import com.github.nenadjakic.tombola.config.TombolaProperties;
+import com.github.nenadjakic.tombola.model.entity.Log;
+import com.github.nenadjakic.tombola.service.LogService;
 import com.github.nenadjakic.tombola.service.LazyTombolaServiceDecorator;
 import com.github.nenadjakic.tombola.util.PrettyPrinter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,7 +11,12 @@ import org.springframework.shell.standard.ShellCommandGroup;
 import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
 import org.springframework.shell.standard.ShellOption;
+import org.springframework.shell.table.ArrayTableModel;
+import org.springframework.shell.table.BorderStyle;
+import org.springframework.shell.table.TableBuilder;
+import org.springframework.shell.table.TableModel;
 
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,14 +27,15 @@ public class TombolaCommand {
     private final LazyTombolaServiceDecorator lazyTombolaServiceDecorator;
     private final TombolaProperties tombolaProperties;
     private final PrettyPrinter prettyPrinter;
-
+    private final LogService logService;
     @Autowired
     public TombolaCommand(final LazyTombolaServiceDecorator lazyTombolaServiceDecorator,
                           final TombolaProperties tombolaProperties,
-                          final PrettyPrinter prettyPrinter) {
+                          final PrettyPrinter prettyPrinter, LogService logService) {
         this.lazyTombolaServiceDecorator = lazyTombolaServiceDecorator;
         this.tombolaProperties = tombolaProperties;
         this.prettyPrinter = prettyPrinter;
+        this.logService = logService;
     }
 
     @ShellMethod(value = "Generate tombola/lottery numbers.")
@@ -69,6 +77,20 @@ public class TombolaCommand {
         }
     }
 
+    @ShellMethod(value = "Show previous tombola/lottery logs", key = "logs")
+    public String history() {
+        var result =  logService.getAll();
+
+        if (result.isEmpty()) {
+            return prettyPrinter.warning("No logs.");
+        }
+        Object[][] data = preparaHistoryData(result);
+        TableModel tableModel = new ArrayTableModel(data);
+        var tableBuilder = new TableBuilder(tableModel);
+        tableBuilder.addFullBorder(BorderStyle.oldschool);
+        return prettyPrinter.info(tableBuilder.build().render(80));
+    }
+
     public Availability generateAvailability() {
         return !lazyTombolaServiceDecorator.isNumberGenerated() ? Availability.available() : Availability.unavailable("Tomobola is not generated yet or all numbers are picked.");
     }
@@ -85,4 +107,26 @@ public class TombolaCommand {
         return lazyTombolaServiceDecorator.isNumberGenerated() ? Availability.available() : Availability.unavailable("Tomobola is not generated yet or all numbers are picked.");
     }
 
+    private Object[][] preparaHistoryData(final List<Log> logList) {
+        String[] header = { "Id", "Tombola/loterry datetime", "Combination", "Picked numbers" };
+        Object[][] data = new Object[logList.size() + 1][];
+        data[0] = header;
+        for (int i = 1; i <= logList.size(); i++) {
+            var history = logList.get(i-1);
+            data[i] = getHistoryParts(history);
+        }
+
+        return data;
+    }
+
+    private Object[] getHistoryParts(Log log) {
+        var dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd' 'HH:mm:ss");
+
+        return new Object[] {
+                log.getId(),
+                log.getDateTime().format(dateTimeFormatter),
+                log.getCombination(),
+                log.getPickedNumbers().stream().map(Object::toString).collect(Collectors.joining(", "))
+        };
+    }
 }

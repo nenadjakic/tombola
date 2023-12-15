@@ -18,10 +18,7 @@ public class SpinnerComponent {
     }
 
     public void display(String message) {
-        if (!started) {
-            prettyPrinter.getTerminal().writer().println();
-            started = true;
-        }
+        checkStart();
         String progress = String.format("%s", message);
 
         prettyPrinter.getTerminal().writer().println(CUU + "\r" + getSpinnerChar() + progress);
@@ -29,10 +26,7 @@ public class SpinnerComponent {
     }
 
     public void display() {
-        if (!started) {
-            prettyPrinter.getTerminal().writer().println();
-            started = true;
-        }
+        checkStart();
         prettyPrinter.getTerminal().writer().println(CUU + "\r" + getSpinnerChar());
         prettyPrinter.getTerminal().flush();
     }
@@ -49,5 +43,12 @@ public class SpinnerComponent {
             spinCounter = 0;
         }
         return spinChar;
+    }
+
+    private void checkStart() {
+        if (!started) {
+            prettyPrinter.getTerminal().writer().println();
+            started = true;
+        }
     }
 }
